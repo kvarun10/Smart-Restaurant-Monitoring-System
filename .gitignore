@@ -1,0 +1,17 @@
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# data, weights and run outputs never go in git
+datasets/
+runs/
+*.pt
+*.onnx
+*.mp4
+*.zip
+
+# secrets
+.env
