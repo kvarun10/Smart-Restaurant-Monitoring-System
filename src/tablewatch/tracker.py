@@ -78,6 +78,15 @@ class TableTracker:
         self._candidates: list[dict] = []  # {"box": Box, "hits": deque[(t, state, conf)]}
         self.events: list[dict] = []
 
+    def add_table(self, table_id: str, box: Box, t: float = 0.0) -> Table:
+        """Register a table whose position is already known (skips discovery)."""
+        table = Table(id=table_id, box=tuple(box), state_since=t, last_seen=t)
+        self.tables.append(table)
+        return table
+
+    def table(self, table_id: str) -> Table:
+        return next(tb for tb in self.tables if tb.id == table_id)
+
     # ------------------------------------------------------------------ update
     def update(self, t: float, detections: list[Detection]) -> list[dict]:
         """Feed all detections of the frame at video time `t` (seconds). Returns new events."""

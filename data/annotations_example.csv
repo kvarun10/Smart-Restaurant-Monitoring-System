@@ -1,0 +1,5 @@
+table,start_s,end_s,state
+T1,0,95,occupied
+T1,95,260,unoccupied_dirty
+T1,260,600,unoccupied_clean
+T2,0,600,unoccupied_clean
