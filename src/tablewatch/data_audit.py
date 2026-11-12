@@ -37,6 +37,26 @@ def source_group(stem: str) -> str:
     return (g or s).lower()
 
 
+_CAMERA_SUFFIX = re.compile(r"_(?:n\d+-(?:d\d+|ipc)|ch\d+|d\d+)$")  # "_n1-d12", "_ch05", "_d8"
+_CAMERA_PREFIX = re.compile(r"^cam\d+_")                             # "cam6_1hour" -> "1hour"
+
+
+def venue_group(stem: str) -> str:
+    """Restaurant an image comes from: source_group() with the camera id removed.
+
+    Stricter than source_group: two cameras in one restaurant see the same furniture and
+    table settings, so a fair "does it work somewhere new" test holds out whole restaurants.
+
+    >>> venue_group("BCP_N1-D2_1_jpg.rf.a832d26d3ae80c953e4390cac8c2f50c")
+    'bcp'
+    """
+    g = source_group(stem)
+    m = _CAMERA_SUFFIX.search(g)
+    if m and "_" not in g[:m.start()]:  # "<venue>_<camera>" only, not any name ending in _d98
+        g = g[:m.start()] or g
+    return _CAMERA_PREFIX.sub("", g) or g
+
+
 @dataclass
 class ImageRecord:
     split: str
@@ -106,12 +126,19 @@ def class_table(records: list[ImageRecord], names: list[str]) -> dict:
     return out
 
 
-def group_table(records: list[ImageRecord]) -> list[dict]:
-    """One row per source group: how many images it contributes to each split."""
+def group_table(records: list[ImageRecord], names: list[str] | None = None) -> list[dict]:
+    """One row per source group: images per split and, if `names` is given, labels per class."""
     per_group: dict = defaultdict(Counter)
+    per_class: dict = defaultdict(Counter)
     for r in records:
         per_group[r.group][r.split] += 1
-    rows = [{"group": g, "total": sum(c.values()), **dict(c)} for g, c in per_group.items()]
+        per_class[r.group].update(b[0] for b in r.boxes)
+    rows = []
+    for g, c in per_group.items():
+        row = {"group": g, "total": sum(c.values()), **dict(c)}
+        if names:
+            row.update({f"n_{name}": per_class[g][i] for i, name in enumerate(names)})
+        rows.append(row)
     return sorted(rows, key=lambda row: -row["total"])
 
 
@@ -181,7 +208,7 @@ def audit(root: str | Path, names: list[str], group_fn=source_group, max_distanc
     return {
         "n_images": len(records),
         "class_table": class_table(records, names),
-        "groups": group_table(records),
+        "groups": group_table(records, names),
         "group_leakage": leakage_report(records),
         "near_duplicates": near_duplicate_report(records, max_distance),
     }

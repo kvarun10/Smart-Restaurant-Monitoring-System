@@ -3,7 +3,7 @@ import pytest
 from PIL import Image
 
 from tablewatch.data_audit import (audit, dhash, leakage_report, load_yolo_dataset, near_duplicate_report,
-                                   source_group)
+                                   source_group, venue_group)
 from tablewatch.split import group_split, write_split
 
 NAMES = ["occupied", "unoccupied_clean", "unoccupied_dirty"]
@@ -18,6 +18,19 @@ NAMES = ["occupied", "unoccupied_clean", "unoccupied_dirty"]
 ])
 def test_source_group(stem, group):
     assert source_group(stem) == group
+
+
+@pytest.mark.parametrize("stem,venue", [
+    ("BCP_N1-D2_1_jpg.rf.a832d26d3ae80c953e4390cac8c2f50c", "bcp"),
+    ("bnm_n2-ipc_2", "bnm"),
+    ("CRI_CH05_1", "cri"),
+    ("pks_d12_1", "pks"),
+    ("jh-nma_n3-d5_2", "jh-nma"),
+    ("cam6_1hour_frame_0175", "1hour"),
+    ("whatsapp-image-2025-03-26-at-19_35_27_d98", "whatsapp-image-2025-03-26-at-19_35_27_d98"),
+])
+def test_venue_group(stem, venue):
+    assert venue_group(stem) == venue
 
 
 def _scene(seed):

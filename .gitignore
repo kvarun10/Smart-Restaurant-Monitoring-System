@@ -15,3 +15,6 @@ runs/
 
 # secrets
 .env
+
+# contact sheets contain third-party CCTV frames; kept local until the image source and licence are confirmed
+report/**/dirty_labels_*.jpg
